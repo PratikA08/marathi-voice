@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>मराठी व्हॉइस टू टेक्स्ट</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      color: #e8e8f0;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 20% 50%, #1a0533 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, #001a33 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 80%, #0d1a00 0%, transparent 50%);
+      animation: bgShift 8s ease-in-out infinite alternate;
+      z-index: -1;
+    }
+
+    @keyframes bgShift {
+      0%   { transform: rotate(0deg) scale(1); }
+      100% { transform: rotate(3deg) scale(1.05); }
+    }
+
+    .container {
+      width: 90%;
+      max-width: 750px;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header .icon {
+      font-size: 56px;
+      display: block;
+      margin-bottom: 10px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .header h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff6b35, #f7c59f, #ebebd3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      padding: 10px 24px;
+      border-radius: 30px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #444;
+      transition: all 0.4s;
+    }
+
+    .status-dot.idle    { background: #555; }
+    .status-dot.ready   { background: #00e676; box-shadow: 0 0 10px #00e676; }
+    .status-dot.recording {
+      background: #ff1744;
+      box-shadow: 0 0 15px #ff1744;
+      animation: pulse 1s infinite;
+    }
+    .status-dot.processing { background: #ff9800; box-shadow: 0 0 10px #ff9800; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    #statusText {
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      color: #aaa;
+    }
+
+    /* Main card */
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 36px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* Mic button */
+    .mic-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .mic-btn {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 2.8rem;
+      background: linear-gradient(135deg, #ff6b35, #c0392b);
+      color: white;
+      box-shadow: 0 0 30px rgba(255,107,53,0.4), 0 8px 32px rgba(0,0,0,0.4);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mic-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 50px rgba(255,107,53,0.6), 0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    .mic-btn:active { transform: scale(0.96); }
+
+    .mic-btn.recording {
+      background: linear-gradient(135deg, #ff1744, #d50000);
+      animation: recordPulse 1.5s infinite;
+    }
+
+    @keyframes recordPulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(255,23,68,0.5), 0 8px 32px rgba(0,0,0,0.4); }
+      50%       { box-shadow: 0 0 70px rgba(255,23,68,0.9), 0 8px 32px rgba(0,0,0,0.4); }
+    }
+
+    /* Sound wave bars */
+    .wave-bars {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 40px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .wave-bars.active { opacity: 1; }
+
+    .wave-bars span {
+      display: block;
+      width: 5px;
+      background: linear-gradient(to top, #ff6b35, #ffcc80);
+      border-radius: 3px;
+      height: 8px;
+      animation: wave 0.8s ease-in-out infinite;
+    }
+
+    .wave-bars span:nth-child(1) { animation-delay: 0.0s; }
+    .wave-bars span:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bars span:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bars span:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bars span:nth-child(5) { animation-delay: 0.4s; }
+    .wave-bars span:nth-child(6) { animation-delay: 0.3s; }
+    .wave-bars span:nth-child(7) { animation-delay: 0.2s; }
+    .wave-bars span:nth-child(8) { animation-delay: 0.1s; }
+    .wave-bars span:nth-child(9) { animation-delay: 0.0s; }
+
+    @keyframes wave {
+      0%, 100% { height: 8px; }
+      50%       { height: 36px; }
+    }
+
+    .mic-label {
+      font-size: 0.9rem;
+      color: #777;
+      letter-spacing: 1px;
+    }
+
+    /* Output box */
+    .output-section { margin-bottom: 24px; }
+
+    .output-label {
+      font-size: 0.85rem;
+      color: #ff6b35;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .output-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,107,53,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 120px;
+      font-family: 'Tiro Devanagari Marathi', serif;
+      font-size: 1.3rem;
+      line-height: 1.8;
+      color: #f0f0f0;
+      word-break: break-word;
+      transition: border-color 0.3s;
+      position: relative;
+    }
+
+    .output-box.has-text {
+      border-color: rgba(255,107,53,0.5);
+    }
+
+    .placeholder-text {
+      color: #444;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+    }
+
+    /* Loader */
+    .loader {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+    }
+
+    .loader.active { display: flex; }
+
+    .loader-dot {
+      width: 10px;
+      height: 10px;
+      background: #ff6b35;
+      border-radius: 50%;
+      animation: loaderBounce 0.6s ease-in-out infinite alternate;
+    }
+
+    .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes loaderBounce {
+      from { transform: translateY(0); opacity: 0.5; }
+      to   { transform: translateY(-14px); opacity: 1; }
+    }
+
+    /* Action buttons */
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: all 0.25s;
+    }
+
+    .btn-copy {
+      background: rgba(255,107,53,0.15);
+      color: #ff9a6c;
+      border: 1px solid rgba(255,107,53,0.3);
+    }
+
+    .btn-copy:hover {
+      background: rgba(255,107,53,0.3);
+      border-color: #ff6b35;
+    }
+
+    .btn-clear {
+      background: rgba(255,255,255,0.05);
+      color: #888;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .btn-clear:hover {
+      background: rgba(255,255,255,0.1);
+      color: #ccc;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #ff6b35;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 999;
+      box-shadow: 0 8px 30px rgba(255,107,53,0.4);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Error */
+    .error-msg {
+      color: #ff5252;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* Footer */
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #333;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="icon">🎙️</span>
+    <h1>मराठी व्हॉइस टू टेक्स्ट</h1>
+    <p>Speak in Marathi — Get instant text output</p>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-dot idle" id="statusDot"></div>
+    <span id="statusText">तयार आहे — Ready</span>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Mic -->
+    <div class="mic-section">
+      <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
+      <div class="wave-bars" id="waveBars">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="mic-label" id="micLabel">बोलण्यासाठी दाबा · Press to Speak</span>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section">
+      <div class="output-label">📝 ओळखलेला मजकूर · Recognized Text</div>
+      <div class="output-box" id="outputBox">
+        <span class="placeholder-text" id="placeholderText">
+          येथे आपले मराठी बोलणे दिसेल...<br/>
+          Your Marathi speech will appear here...
+        </span>
+      </div>
+      <div class="error-msg" id="errorMsg">❌ काहीतरी चूक झाली. पुन्हा प्रयत्न करा.</div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions">
+      <button class="btn btn-copy" onclick="copyText()">📋 Copy Text</button>
+      <button class="btn btn-clear" onclick="clearText()">🗑️ Clear</button>
+    </div>
+
+  </div>
+
+  <div class="footer">Made for Marathi · मराठी भाषेसाठी</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✅ Copied!</div>
+
+<script>
+  let mediaRecorder;
+  let audioChunks = [];
+  let isRecording = false;
+
+  const micBtn    = document.getElementById('micBtn');
+  const waveBars  = document.getElementById('waveBars');
+  const statusDot = document.getElementById('statusDot');
+  const statusText= document.getElementById('statusText');
+  const micLabel  = document.getElementById('micLabel');
+  const outputBox = document.getElementById('outputBox');
+  const loader    = document.getElementById('loader');
+  const errorMsg  = document.getElementById('errorMsg');
+  const placeholder = document.getElementById('placeholderText');
+
+  function setStatus(mode, text) {
+    statusDot.className = 'status-dot ' + mode;
+    statusText.textContent = text;
+  }
+
+  async function toggleRecording() {
+    if (!isRecording) {
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = sendAudio;
+        mediaRecorder.start();
+
+        isRecording = true;
+        micBtn.classList.add('recording');
+        micBtn.textContent = '⏹️';
+        waveBars.classList.add('active');
+        micLabel.textContent = 'थांबण्यासाठी दाबा · Press to Stop';
+        setStatus('recording', 'रेकॉर्डिंग सुरू... · Recording...');
+        errorMsg.classList.remove('show');
+      } catch (err) {
+        errorMsg.textContent = '❌ मायक्रोफोन परवानगी नाकारली. Please allow microphone.';
+        errorMsg.classList.add('show');
+      }
+    } else {
+      // Stop recording
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      isRecording = false;
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎤';
+      waveBars.classList.remove('active');
+      micLabel.textContent = 'प्रक्रिया होत आहे... · Processing...';
+      setStatus('processing', 'ओळखत आहे... · Recognizing...');
+      loader.classList.add('active');
+      if (placeholder) placeholder.style.display = 'none';
+    }
+  }
+
+  async function sendAudio() {
+    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.webm');
+
+    try {
+      const response = await fetch('/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      loader.classList.remove('active');
+
+      if (data.text) {
+        outputBox.innerHTML = data.text;
+        outputBox.classList.add('has-text');
+        setStatus('ready', 'यशस्वी! · Success!');
+        micLabel.textContent = 'पुन्हा बोलण्यासाठी दाबा · Press to Speak Again';
+      } else {
+        showError(data.error || 'ओळखता आले नाही. पुन्हा बोला.');
+      }
+    } catch (err) {
+      loader.classList.remove('active');
+      showError('सर्व्हर कनेक्शन नाही. Backend चालू आहे का?');
+    }
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = '❌ ' + msg;
+    errorMsg.classList.add('show');
+    setStatus('idle', 'तयार आहे — Ready');
+    micLabel.textContent = 'बोलण्यासाठी दाबा · Press to Speak';
+  }
+
+  function copyText() {
+    const text = outputBox.innerText.trim();
+    if (!text || text.includes('येथे')) return;
+    navigator.clipboard.writeText(text).then(() => showToast());
+  }
+
+  function clearText() {
+    outputBox.innerHTML = '<span class="placeholder-text" id="placeholderText">येथे आपले मराठी बोलणे दिसेल...<br/>Your Marathi speech will appear here...</span>';
+    outputBox.classList.remove('has-text');
+    errorMsg.classList.remove('show');
+    setStatus('idle', 'तयार आहे — Ready');
+    micLabel.textContent = 'बोलण्यासाठी दाबा · Press to Speak';
+  }
+
+  function showToast() {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // Init status
+  setStatus('ready', 'तयार आहे — Ready');
+</script>
+</body>
+</html>
