@@ -376,7 +376,7 @@
 
   <div class="status-bar">
     <div class="status-dot idle" id="statusDot"></div>
-    <span id="statusText">तयार आहे — Ready</span>
+    <span id="statusText"> Ready</span>
   </div>
 
   <div class="card">
@@ -388,7 +388,7 @@
         <span></span><span></span><span></span>
         <span></span><span></span><span></span>
       </div>
-      <span class="mic-label" id="micLabel">बोलण्यासाठी दाबा · Press to Speak</span>
+      <span class="mic-label" id="micLabel"> Press to Speak</span>
     </div>
 
     <div class="loader" id="loader">
@@ -398,15 +398,14 @@
     </div>
 
     <div class="output-section">
-      <div class="output-label">📝 ओळखलेला मजकूर · Recognized Text</div>
+      <div class="output-label">📝 Recognized Text</div>
       <div class="output-box" id="outputBox">
         <span class="placeholder-text" id="placeholderText">
-          येथे आपले मराठी बोलणे दिसेल...<br/>
           Your Marathi speech will appear here...
         </span>
       </div>
       <div class="word-count" id="wordCount"></div>
-      <div class="error-msg" id="errorMsg">❌ काहीतरी चूक झाली. पुन्हा प्रयत्न करा.</div>
+      <div class="error-msg" id="errorMesssage"/div>
     </div>
 
     <div class="actions">
@@ -416,7 +415,7 @@
 
   </div>
 
-  <div class="footer">Made for Marathi · मराठी भाषेसाठी</div>
+  <div class="footer">Made for Marathi/div>
 </div>
 
 <div class="toast" id="toast">✅ Copied!</div>
@@ -446,7 +445,7 @@
     const text = fullTranscript.trim();
     if (!text) { wordCount.textContent = ''; return; }
     const words = text.split(/\s+/).filter(w => w.length > 0).length;
-    wordCount.textContent = `${words} शब्द · words`;
+    wordCount.textContent = `${words} words`;
   }
 
   async function toggleRecording() {
@@ -464,11 +463,11 @@
         micBtn.classList.add('recording');
         micBtn.textContent = '⏹️';
         waveBars.classList.add('active');
-        micLabel.textContent = 'थांबण्यासाठी दाबा · Press to Stop';
-        setStatus('recording', 'रेकॉर्डिंग सुरू... · Recording...');
+        micLabel.textContent = 'Press to Stop';
+        setStatus('recording', 'Recording...');
         errorMsg.classList.remove('show');
       } catch (err) {
-        errorMsg.textContent = '❌ मायक्रोफोन परवानगी नाकारली. Please allow microphone.';
+        errorMsg.textContent = 'Please allow microphone.';
         errorMsg.classList.add('show');
       }
     } else {
@@ -518,8 +517,8 @@
   function showError(msg) {
     errorMsg.textContent = '❌ ' + msg;
     errorMsg.classList.add('show');
-    setStatus('idle', 'तयार आहे — Ready');
-    micLabel.textContent = 'बोलण्यासाठी दाबा · Press to Speak';
+    setStatus('idle', 'Ready');
+    micLabel.textContent = 'Press to Speak';
   }
 
   function copyText() {
@@ -531,12 +530,12 @@
   function clearText() {
     // ✅ FIX 3: fullTranscript paN reset kara
     fullTranscript = '';
-    outputBox.innerHTML = '<span class="placeholder-text" id="placeholderText">येथे आपले मराठी बोलणे दिसेल...<br/>Your Marathi speech will appear here...</span>';
+    outputBox.innerHTML = '<span class="placeholder-text" id="placeholderText"> Your Marathi speech will appear here...</span>';
     outputBox.classList.remove('has-text');
     errorMsg.classList.remove('show');
     wordCount.textContent = '';
-    setStatus('idle', 'तयार आहे — Ready');
-    micLabel.textContent = 'बोलण्यासाठी दाबा · Press to Speak';
+    setStatus('idle', '— Ready');
+    micLabel.textContent = 'Press to Speak';
   }
 
   function showToast() {
@@ -545,7 +544,7 @@
     setTimeout(() => toast.classList.remove('show'), 2500);
   }
 
-  setStatus('ready', 'तयार आहे — Ready');
+  setStatus('ready', 'Ready');
 </script>
 </body>
 </html>
