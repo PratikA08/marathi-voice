@@ -20,7 +20,6 @@
       overflow-x: hidden;
     }
 
-    /* Animated background */
     body::before {
       content: '';
       position: fixed;
@@ -46,7 +45,6 @@
       padding: 20px;
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 40px;
@@ -81,7 +79,6 @@
       letter-spacing: 1px;
     }
 
-    /* Status bar */
     .status-bar {
       display: flex;
       align-items: center;
@@ -125,7 +122,6 @@
       color: #aaa;
     }
 
-    /* Main card */
     .card {
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.08);
@@ -135,7 +131,6 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
 
-    /* Mic button */
     .mic-section {
       display: flex;
       flex-direction: column;
@@ -176,7 +171,6 @@
       50%       { box-shadow: 0 0 70px rgba(255,23,68,0.9), 0 8px 32px rgba(0,0,0,0.4); }
     }
 
-    /* Sound wave bars */
     .wave-bars {
       display: flex;
       align-items: center;
@@ -218,7 +212,6 @@
       letter-spacing: 1px;
     }
 
-    /* Output box */
     .output-section { margin-bottom: 24px; }
 
     .output-label {
@@ -255,7 +248,16 @@
       font-size: 1rem;
     }
 
-    /* Loader */
+    /* Word count badge */
+    .word-count {
+      font-size: 0.78rem;
+      color: #555;
+      letter-spacing: 1px;
+      margin-top: 8px;
+      text-align: right;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
     .loader {
       display: none;
       justify-content: center;
@@ -282,7 +284,6 @@
       to   { transform: translateY(-14px); opacity: 1; }
     }
 
-    /* Action buttons */
     .actions {
       display: flex;
       gap: 12px;
@@ -325,7 +326,6 @@
       color: #ccc;
     }
 
-    /* Toast */
     .toast {
       position: fixed;
       bottom: 30px;
@@ -345,7 +345,6 @@
 
     .toast.show { transform: translateX(-50%) translateY(0); }
 
-    /* Error */
     .error-msg {
       color: #ff5252;
       font-size: 0.9rem;
@@ -356,7 +355,6 @@
 
     .error-msg.show { display: block; }
 
-    /* Footer */
     .footer {
       margin-top: 30px;
       text-align: center;
@@ -370,23 +368,19 @@
 
 <div class="container">
 
-  <!-- Header -->
   <div class="header">
     <span class="icon">🎙️</span>
     <h1>मराठी व्हॉइस टू टेक्स्ट</h1>
     <p>Speak in Marathi — Get instant text output</p>
   </div>
 
-  <!-- Status -->
   <div class="status-bar">
     <div class="status-dot idle" id="statusDot"></div>
     <span id="statusText">तयार आहे — Ready</span>
   </div>
 
-  <!-- Card -->
   <div class="card">
 
-    <!-- Mic -->
     <div class="mic-section">
       <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
       <div class="wave-bars" id="waveBars">
@@ -397,14 +391,12 @@
       <span class="mic-label" id="micLabel">बोलण्यासाठी दाबा · Press to Speak</span>
     </div>
 
-    <!-- Loader -->
     <div class="loader" id="loader">
       <div class="loader-dot"></div>
       <div class="loader-dot"></div>
       <div class="loader-dot"></div>
     </div>
 
-    <!-- Output -->
     <div class="output-section">
       <div class="output-label">📝 ओळखलेला मजकूर · Recognized Text</div>
       <div class="output-box" id="outputBox">
@@ -413,10 +405,10 @@
           Your Marathi speech will appear here...
         </span>
       </div>
+      <div class="word-count" id="wordCount"></div>
       <div class="error-msg" id="errorMsg">❌ काहीतरी चूक झाली. पुन्हा प्रयत्न करा.</div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="actions">
       <button class="btn btn-copy" onclick="copyText()">📋 Copy Text</button>
       <button class="btn btn-clear" onclick="clearText()">🗑️ Clear</button>
@@ -427,32 +419,38 @@
   <div class="footer">Made for Marathi · मराठी भाषेसाठी</div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast">✅ Copied!</div>
 
 <script>
   let mediaRecorder;
   let audioChunks = [];
   let isRecording = false;
+  let fullTranscript = ''; // ✅ FIX 1: Accumulated text store karnyasathi
 
-  const micBtn    = document.getElementById('micBtn');
-  const waveBars  = document.getElementById('waveBars');
-  const statusDot = document.getElementById('statusDot');
-  const statusText= document.getElementById('statusText');
-  const micLabel  = document.getElementById('micLabel');
-  const outputBox = document.getElementById('outputBox');
-  const loader    = document.getElementById('loader');
-  const errorMsg  = document.getElementById('errorMsg');
-  const placeholder = document.getElementById('placeholderText');
+  const micBtn      = document.getElementById('micBtn');
+  const waveBars    = document.getElementById('waveBars');
+  const statusDot   = document.getElementById('statusDot');
+  const statusText  = document.getElementById('statusText');
+  const micLabel    = document.getElementById('micLabel');
+  const outputBox   = document.getElementById('outputBox');
+  const loader      = document.getElementById('loader');
+  const errorMsg    = document.getElementById('errorMsg');
+  const wordCount   = document.getElementById('wordCount');
 
   function setStatus(mode, text) {
     statusDot.className = 'status-dot ' + mode;
     statusText.textContent = text;
   }
 
+  function updateWordCount() {
+    const text = fullTranscript.trim();
+    if (!text) { wordCount.textContent = ''; return; }
+    const words = text.split(/\s+/).filter(w => w.length > 0).length;
+    wordCount.textContent = `${words} शब्द · words`;
+  }
+
   async function toggleRecording() {
     if (!isRecording) {
-      // Start recording
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
@@ -474,7 +472,6 @@
         errorMsg.classList.add('show');
       }
     } else {
-      // Stop recording
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach(t => t.stop());
       isRecording = false;
@@ -484,7 +481,6 @@
       micLabel.textContent = 'प्रक्रिया होत आहे... · Processing...';
       setStatus('processing', 'ओळखत आहे... · Recognizing...');
       loader.classList.add('active');
-      if (placeholder) placeholder.style.display = 'none';
     }
   }
 
@@ -503,8 +499,11 @@
       loader.classList.remove('active');
 
       if (data.text) {
-        outputBox.innerHTML = data.text;
+        // ✅ FIX 2: Replace nahi — APPEND kara
+        fullTranscript += data.text + ' ';
+        outputBox.textContent = fullTranscript;
         outputBox.classList.add('has-text');
+        updateWordCount();
         setStatus('ready', 'यशस्वी! · Success!');
         micLabel.textContent = 'पुन्हा बोलण्यासाठी दाबा · Press to Speak Again';
       } else {
@@ -524,15 +523,18 @@
   }
 
   function copyText() {
-    const text = outputBox.innerText.trim();
-    if (!text || text.includes('येथे')) return;
+    const text = fullTranscript.trim();
+    if (!text) return;
     navigator.clipboard.writeText(text).then(() => showToast());
   }
 
   function clearText() {
+    // ✅ FIX 3: fullTranscript paN reset kara
+    fullTranscript = '';
     outputBox.innerHTML = '<span class="placeholder-text" id="placeholderText">येथे आपले मराठी बोलणे दिसेल...<br/>Your Marathi speech will appear here...</span>';
     outputBox.classList.remove('has-text');
     errorMsg.classList.remove('show');
+    wordCount.textContent = '';
     setStatus('idle', 'तयार आहे — Ready');
     micLabel.textContent = 'बोलण्यासाठी दाबा · Press to Speak';
   }
@@ -543,7 +545,6 @@
     setTimeout(() => toast.classList.remove('show'), 2500);
   }
 
-  // Init status
   setStatus('ready', 'तयार आहे — Ready');
 </script>
 </body>
